@@ -1,0 +1,34 @@
+name: Windows RDP via Tailscale
+
+on:
+  workflow_dispatch: # Allows you to run it manually
+
+jobs:
+  windows-rdp:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Enable RDP and Set Password
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        net user runneradmin "WindowsRDP#2025!"
+      shell: powershell
+
+    - name: Connect to Tailscale
+      uses: tailscale/github-action@v2
+      with:
+        authkey: ${{ secrets.TAILSCALE_AUTH_KEY }}
+        
+    - name: Get Tailscale IP
+      run: |
+        tailscale ip -4
+      shell: bash
+
+    - name: Keep Alive
+      run: |
+        echo "RDP is ready. Connect to the Tailscale IP above."
+        echo "Username: runneradmin"
+        echo "Password: WindowsRDP#2025!"
+        while true; do sleep 3600; done
+      shell: bash
